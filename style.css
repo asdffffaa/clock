@@ -68,10 +68,12 @@ body {
 }
 
 .flip-card {
+  --digit-scale: 1;
   position: relative;
   aspect-ratio: 0.78 / 1;
   min-height: 0;
   overflow: hidden;
+  perspective: 1200px;
   border-radius: var(--radius);
   background: linear-gradient(to bottom, var(--card-top) 0 50%, var(--card-bottom) 50% 100%);
   box-shadow:
@@ -100,15 +102,28 @@ body {
 }
 
 .digits {
+  /* Keep one accessible value; the four visual faces are aria-hidden. */
   position: absolute;
-  inset: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.face-digits {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 200%;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: translateY(-0.01em);
-  font-size: clamp(100px, 18vw, 310px);
+  font-size: calc(clamp(100px, 18vw, 310px) * var(--digit-scale));
   font-weight: 700;
-  letter-spacing: -0.075em;
+  letter-spacing: 0;
+  font-kerning: none;
   line-height: 1;
   color: var(--text);
   text-shadow:
@@ -117,6 +132,53 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
   z-index: 3;
+}
+
+.digit-cell {
+  flex: 0 0 0.56em;
+  width: 0.56em;
+  text-align: center;
+}
+
+.flip-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.static-top,
+.turn-top {
+  top: 0;
+  transform-origin: center bottom;
+  background: linear-gradient(180deg, #1b1b1b, #151515);
+}
+
+.static-bottom,
+.turn-bottom {
+  bottom: 0;
+  transform-origin: center top;
+  background: linear-gradient(180deg, #111, #0c0c0c);
+}
+
+.static-top .face-digits,
+.turn-top .face-digits { top: 0; }
+.static-bottom .face-digits,
+.turn-bottom .face-digits { bottom: 0; }
+
+.turn-top,
+.turn-bottom { visibility: hidden; z-index: 3; }
+.flipping .turn-top {
+  visibility: visible;
+  animation: flipTop 600ms linear both;
+}
+.flipping .turn-bottom {
+  visibility: visible;
+  animation: flipBottom 600ms linear both;
 }
 
 .split-line {
@@ -186,24 +248,14 @@ body {
   100% { filter: brightness(1); }
 }
 
-/* Small "mechanical" tick when a value changes */
-.digits.tick {
-  animation: digitTick 145ms cubic-bezier(.2,.7,.2,1);
+@keyframes flipTop {
+  0% { transform: rotateX(0deg); filter: brightness(1); animation-timing-function: cubic-bezier(.55,.05,.8,.5); }
+  50%, 100% { transform: rotateX(-90deg); filter: brightness(.45); }
 }
 
-@keyframes digitTick {
-  0% {
-    transform: translateY(-0.01em) scaleY(1);
-    filter: brightness(1);
-  }
-  45% {
-    transform: translateY(-0.01em) scaleY(0.965);
-    filter: brightness(0.86);
-  }
-  100% {
-    transform: translateY(-0.01em) scaleY(1);
-    filter: brightness(1);
-  }
+@keyframes flipBottom {
+  0%, 50% { transform: rotateX(90deg); filter: brightness(.45); animation-timing-function: cubic-bezier(.15,.6,.25,1); }
+  100% { transform: rotateX(0deg); filter: brightness(1); }
 }
 
 .portrait-message {
@@ -272,7 +324,11 @@ body {
 
 /* Respect reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .digits.tick,
+  .flipping .turn-top,
+  .flipping .turn-bottom { visibility: hidden; animation: none; }
+  .flipping .static-bottom { visibility: hidden; }
+  .flipping .turn-bottom { visibility: visible; }
+
   .app.flash .flip-card {
     animation: none;
   }

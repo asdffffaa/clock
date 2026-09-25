@@ -21,11 +21,42 @@
   let singleTapTimer = null;
   let lastTapAt = 0;
 
-  let lastShown = {
-    h: "00",
-    m: "00",
-    s: "00"
-  };
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const displays = [hoursEl, minutesEl, secondsEl].map(createDisplay);
+
+  function setFaceValue(face, value) {
+    face.replaceChildren(...Array.from(value, (digit) => {
+      const cell = document.createElement("span");
+      cell.className = "digit-cell";
+      cell.textContent = digit;
+      return cell;
+    }));
+  }
+
+  function createDisplay(el) {
+    const card = el.parentElement;
+    const faces = ["static-top", "static-bottom", "turn-top", "turn-bottom"].map((name) => {
+      const panel = document.createElement("div");
+      panel.className = `flip-half ${name}`;
+      panel.setAttribute("aria-hidden", "true");
+      const face = document.createElement("div");
+      face.className = "face-digits";
+      setFaceValue(face, el.textContent);
+      panel.append(face);
+      card.append(panel);
+      return face;
+    });
+    const display = { el, card, faces, value: el.textContent };
+    card.addEventListener("animationend", (event) => {
+      if (event.animationName === "flipBottom") settleDisplay(display);
+    });
+    return display;
+  }
+
+  function settleDisplay(display) {
+    display.card.classList.remove("flipping");
+    display.faces.forEach((face) => setFaceValue(face, display.value));
+  }
 
   function loadState() {
     try {
@@ -72,33 +103,34 @@
     };
   }
 
-  function animateIfChanged(el, oldValue, newValue) {
-    if (oldValue === newValue) return;
+  function updateDisplay(display, value, animate) {
+    if (!animate) settleDisplay(display);
+    if (display.value === value) return;
+    const previous = display.value;
+    settleDisplay(display);
+    display.value = value;
+    display.el.textContent = value;
+    display.card.style.setProperty("--digit-scale", Math.min(1, 2 / value.length));
 
-    el.classList.remove("tick");
-    void el.offsetWidth;
-    el.classList.add("tick");
+    if (!animate || reducedMotion.matches) {
+      settleDisplay(display);
+      return;
+    }
+
+    const [top, bottom, turningTop, turningBottom] = display.faces;
+    setFaceValue(top, value);
+    setFaceValue(bottom, previous);
+    setFaceValue(turningTop, previous);
+    setFaceValue(turningBottom, value);
+    void display.card.offsetWidth;
+    display.card.classList.add("flipping");
   }
 
-  function render(now = Date.now()) {
+  function render(now = Date.now(), animate = true) {
     const time = formatElapsed(elapsedMs(now));
-
-    if (hoursEl.textContent !== time.h) {
-      animateIfChanged(hoursEl, lastShown.h, time.h);
-      hoursEl.textContent = time.h;
-    }
-
-    if (minutesEl.textContent !== time.m) {
-      animateIfChanged(minutesEl, lastShown.m, time.m);
-      minutesEl.textContent = time.m;
-    }
-
-    if (secondsEl.textContent !== time.s) {
-      animateIfChanged(secondsEl, lastShown.s, time.s);
-      secondsEl.textContent = time.s;
-    }
-
-    lastShown = time;
+    [time.h, time.m, time.s].forEach((value, index) => {
+      updateDisplay(displays[index], value, animate);
+    });
 
     if (state.running) {
       statusEl.textContent = "1 TAP = PAUSE  ·  2 TAPS = RESTART";
@@ -224,7 +256,7 @@
   });
 
   document.addEventListener("visibilitychange", () => {
-    render();
+    render(Date.now(), false);
 
     if (document.visibilityState === "visible" && state.running) {
       requestWakeLock();
@@ -256,7 +288,7 @@
   }
 
   loadState();
-  render();
+  render(Date.now(), false);
 
   if (state.running) {
     requestWakeLock();

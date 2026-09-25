@@ -1,4 +1,4 @@
-const CACHE_NAME = "fullscreen-stopwatch-v1";
+const CACHE_NAME = "fullscreen-stopwatch-v2";
 
 const APP_SHELL = [
   "./",
