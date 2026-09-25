@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Stopwatch" />
+
+  <title>Fullscreen Stopwatch</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <main id="app" class="app" aria-label="Fullscreen stopwatch">
+    <section class="clock" aria-live="off">
+      <div class="unit">
+        <div class="flip-card">
+          <div class="card-top"></div>
+          <div class="card-bottom"></div>
+          <div id="hours" class="digits">00</div>
+          <div class="split-line"></div>
+        </div>
+        <div class="label">HOURS</div>
+      </div>
+
+      <div class="unit">
+        <div class="flip-card">
+          <div class="card-top"></div>
+          <div class="card-bottom"></div>
+          <div id="minutes" class="digits">00</div>
+          <div class="split-line"></div>
+        </div>
+        <div class="label">MINUTES</div>
+      </div>
+
+      <div class="unit">
+        <div class="flip-card">
+          <div class="card-top"></div>
+          <div class="card-bottom"></div>
+          <div id="seconds" class="digits">00</div>
+          <div class="split-line"></div>
+        </div>
+        <div class="label">SECONDS</div>
+      </div>
+    </section>
+
+    <div id="status" class="status">TAP TO START</div>
+
+    <div id="resetHint" class="reset-hint">
+      HOLD TO RESET
+    </div>
+
+    <div class="portrait-message">
+      <div class="phone-icon">↻</div>
+      <strong>Rotate iPhone</strong>
+      <span>Use landscape mode for the full clock view.</span>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
